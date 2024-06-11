@@ -14,6 +14,7 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import static java.awt.event.KeyEvent.VK_UP;
+import static java.awt.GraphicsDevice.WindowTranslucency.*;
 
 import javax.swing.BorderFactory;
 import javax.swing.InputMap;
@@ -33,8 +34,16 @@ public class MainGame {
     
         //note declaration and initialization
         public static final JPanel note = new JPanel();
-        public static int yDown = 20;
-        public static int[] noteOnOrOff = {1, 1, 1, 1, 1, 1};
+        public static int noteX = 400;
+        public static int noteY = -60;
+        public static int noteSpeed = 4;
+        
+        //circling clockwise:
+        //1 > top to bottom
+        //2 > right to left
+        //3 > bottom to top
+        //4 > left to right
+        public static int[] noteState = {1, 1, 1, 1, 1, 2, 3, 4, 2, 3, 4, 4, 1, 2, 2, 3, 3, 4, 2, 2, 2, 3, 2, 2, 1, 2, 4, 2, 4, 2, 4 , 1, 2, 3, 2, 1, 2, 3, 4, 1 , 1, 1, 1, 3, 4};
         public static int current = 0;
         
         public static final JLabel lblScore = new JLabel();
@@ -46,7 +55,7 @@ public class MainGame {
         public static final JPanel arrLeft = new JPanel();
         public static final JPanel arrRight = new JPanel();
         public static final JPanel arrDown = new JPanel();
-        public static final JPanel arrUpo = new JPanel();
+        public static final JPanel arrUp = new JPanel();
         
         //screens
         public static final JPanel scrGame = new JPanel();
@@ -133,10 +142,6 @@ public class MainGame {
         
     }
 
-    public static void handleEventTimerNote1(ActionEvent event1) {
-        
-    }
-    
     public static void game(){
 //        timerMain.stop();
         scrMain.add(scrGame);
@@ -155,39 +160,68 @@ public class MainGame {
         
         //adds "rhythm note" JPanel from constructor
         scrGame.add(note);
-        note.setBounds(100,yDown,100,100);
+        note.setBounds(noteX,noteY,20,20);
         note.setBackground(Color.RED);
 
-        Timer timerNote1 = null;
-        timerNote1.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent event1) {
-                handleEventTimerNote1(event1);
-            }
+        scrGame.add(arrLeft);
+        scrGame.add(arrUp);
+        scrGame.add(arrRight);
+        scrGame.add(arrDown);
         
-        });
+        
+
         //Starts a timer, using an action listener
-        Timer timerNote1 = new Timer(6,new MyActionListener());
+        Timer timerNote = new Timer(1,new MyActionListener());
         //change this delay value to change the speed that the note slides down the screen
-        timerNote1.start();
+        timerNote.start();
         
         //inside this class because the timer is in here -> this will run every 6ms detecting a key press! 
                 scrMain.addKeyListener(new KeyAdapter() {
+            @Override
             public void keyPressed(KeyEvent ke) {
                int key = ke.getKeyCode();   
-                if (ke.getSource() == timerNote1 && key == KeyEvent.VK_LEFT) {
+                if (key == KeyEvent.VK_SPACE) {
                     
-                    System.out.println("The left arrow key is pressed");
-                    if (note.getY() >= 500 && note.getY() < 640) {
+                    System.out.println("The SpaceBar Key Was Pressed.");
+                    if (note.getY() >= 500 && note.getY() < 640 || note.getY() > 0 && note.getY() <= 140 || note.getX() <= 140 && note.getX() > 0 || note.getX() >= 500 && note.getX() < 800) {
                     score++;
-//                  noteOnOrOff[current] = noteOnOrOff[current++];
-                    yDown = -60;
-                    timerNote1.restart();
+                    current++;
+                    
+                        
+//                    yDown = -60;
+                    timerNote.restart();
                     } else {
                     score--;
+                    current++;
                 //make the note die, next index in array ... 
                     }
+                    switch (current) {
+                        case 4 -> noteSpeed++;
+                        case 10 -> noteSpeed++;
+                        case 16 -> noteSpeed++;
+                        case 20 -> noteSpeed++;
+                        case 25 -> noteSpeed++;
+                        case 27 -> noteSpeed++;
+                        case 30 -> noteSpeed++;
+                        //etc and etc depending on how fast I want it to go to
+                    }
                     
+                    switch (noteState[current]) {
+                            case 1 -> {
+                                noteX = 400;
+                                noteY = -60;
+                            } case 2 -> {
+                                noteX = 860;
+                                noteY = 220;
+                            } case 3 -> {
+                                noteX = 400;
+                                noteY = 700;
+                            } case 4 -> {
+                                noteX = -60;
+                                noteY = 220;
+                            }
+                        }
+                        note.setLocation(noteX, noteY);
                }
                
 
@@ -226,18 +260,26 @@ public class MainGame {
     }
 
     
-    //new class that checks for action update, on update, change the y value of the note by 1 each 10ms delay
+    //new class that checks for action update, on update, change the y value of the note by "noteSpeed" each ~1ms delay
+    //not actually 1ms as threads can "lag"
     public static class MyActionListener implements ActionListener {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            note.setLocation(100, yDown++);
+            switch (noteState[current]) {
+                case 1 -> noteY += noteSpeed;
+                case 2 -> noteX -= noteSpeed;
+                case 3 -> noteY -= noteSpeed;
+                case 4 -> noteX += noteSpeed;
+                
+            }
+            note.setLocation(noteX, noteY);
             lblScore.setText(Integer.toString(score));
         }
 
     }
 
-    public static void main() {
+//    public static void main() {
 //        javax.swing.SwingUtilities.invokeLater(new Runnable(){
 //            @Override
 //            public void run(){
@@ -247,5 +289,5 @@ public class MainGame {
 //        });
 
 
-    }
+//    }
 }
